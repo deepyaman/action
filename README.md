@@ -31,6 +31,8 @@ jobs:
         path: ~/.cache/pre-commit
         key: pre-commit|${{ env.PY }}|${{ hashFiles('.pre-commit-config.yaml') }}
     - uses: pre-commit/action@v1.0.1
+      with:
+        extra_args: ['flake8', '--all-files']
 ```
 
 This does a few things:
@@ -38,6 +40,7 @@ This does a few things:
 - clones the code
 - installs python
 - sets up the `pre-commit` cache
+- only runs the `flake8` hook against all the files (default behaviour is to run all the hooks against all the files)
 
 Hopefully in the future when `actions` matures the yaml can be simplified.
 
