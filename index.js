@@ -3,22 +3,22 @@ const exec = require('@actions/exec');
 const github = require('@actions/github');
 const tr = require('@actions/exec/lib/toolrunner');
 
-let args = core.getInput('args');
-if (!args) {
-    args = [
-        'run', '--all-files', '--show-diff-on-failure', '--color=always'
-    ];
-} else {
-    args = [
-        'run', ...tr.argStringToArray(args), '--show-diff-on-failure', '--color=always'
-    ];
-}
-
 function addToken(url, token) {
     return url.replace(/^https:\/\//, `https://x-access-token:${token}@`)
 }
 
 async function main() {
+    let args = core.getInput('args');
+    if (!args) {
+        args = [
+            'run', '--all-files', '--show-diff-on-failure', '--color=always'
+        ];
+    } else {
+        args = [
+            'run', ...tr.argStringToArray(args), '--show-diff-on-failure', '--color=always'
+        ];
+    }
+
     await core.group('install pre-commit', async () => {
         await exec.exec('pip', ['install', 'pre-commit']);
         await exec.exec('pip', ['freeze', '--local']);
