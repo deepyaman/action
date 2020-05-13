@@ -1,6 +1,7 @@
 const core = require('@actions/core');
 const exec = require('@actions/exec');
 const github = require('@actions/github');
+const tr = require('@actions/exec/lib/toolrunner');
 
 function addToken(url, token) {
     return url.replace(/^https:\/\//, `https://x-access-token:${token}@`);
@@ -12,12 +13,14 @@ async function main() {
         await exec.exec('pip', ['freeze', '--local']);
     });
 
-    const extra_args = core.getInput('extra_args');
-    if (!Array.isArray(extra_args)) {
-        throw new Error('`extra_args` must be an `Array`');
+    let args = core.getInput('extra_args');
+    if (!args) {
+        args = [
+            'run', '--all-files', '--show-diff-on-failure', '--color=always'
+        ];
     } else {
-        const args = [
-            'run', '--show-diff-on-failure', '--color=always', ...extra_args
+        args = [
+            'run', ...tr.argStringToArray(args), '--show-diff-on-failure', '--color=always'
         ];
     }
 
