@@ -1,38 +1,35 @@
 const core = require('@actions/core');
 const exec = require('@actions/exec');
 const github = require('@actions/github');
-const tr = require('@actions/exec/lib/toolrunner');
 
 function addToken(url, token) {
-    return url.replace(/^https:\/\//, `https://x-access-token:${token}@`)
+    return url.replace(/^https:\/\//, `https://x-access-token:${token}@`);
 }
 
 async function main() {
-    let extra_args = core.getInput('extra_args');
-    if (!extra_args) {
-        extra_args = [
-            'run', '--all-files', '--show-diff-on-failure', '--color=always'
-        ];
-    } else {
-        extra_args = [
-            'run', ...tr.extra_argstringToArray(extra_args), '--show-diff-on-failure', '--color=always'
-        ];
-    }
-
     await core.group('install pre-commit', async () => {
         await exec.exec('pip', ['install', 'pre-commit']);
         await exec.exec('pip', ['freeze', '--local']);
     });
 
+    const extra_args = core.getInput('extra_args');
+    if (!Array.isArray(extra_args)) {
+        throw new Error('`extra_args` must be an `Array`');
+    } else {
+        const args = [
+            'run', '--show-diff-on-failure', '--color=always', ...extra_args
+        ];
+    }
+
     const token = core.getInput('token');
     const pr = github.context.payload.pull_request;
     const push = !!token && !!pr;
-    const ret = await exec.exec('pre-commit', extra_args, {ignoreReturnCode: push});
+    const ret = await exec.exec('pre-commit', args, {ignoreReturnCode: push});
     if (ret && push) {
         // actions do not run on pushes made by actions.
         // need to make absolute sure things are good before pushing
         // TODO: is there a better way around this limitation?
-        await exec.exec('pre-commit', extra_args);
+        await exec.exec('pre-commit', args);
 
         const diff = await exec.exec(
             'git', ['diff', '--quiet'], {ignoreReturnCode: true}
